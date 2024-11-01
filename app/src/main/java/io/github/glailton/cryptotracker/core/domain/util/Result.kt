@@ -1,4 +1,4 @@
-package io.github.glailton.cryptotracker.util
+package io.github.glailton.cryptotracker.core.domain.util
 
 typealias DomainError = Error
 
