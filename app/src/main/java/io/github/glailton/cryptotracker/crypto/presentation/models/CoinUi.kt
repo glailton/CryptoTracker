@@ -1,8 +1,9 @@
 package io.github.glailton.cryptotracker.crypto.presentation.models
 
 import androidx.annotation.DrawableRes
-import io.github.glailton.cryptotracker.crypto.domain.Coin
 import io.github.glailton.cryptotracker.core.presentation.util.getDrawableIdForCoin
+import io.github.glailton.cryptotracker.crypto.domain.Coin
+import io.github.glailton.cryptotracker.crypto.presentation.coin_detail.utils.DataPoint
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -14,7 +15,8 @@ data class CoinUi(
     val marketCapUsd: DisplayableNumber,
     val priceUsd: DisplayableNumber,
     val changePercent24Hr: DisplayableNumber,
-    @DrawableRes val iconRes: Int
+    @DrawableRes val iconRes: Int,
+    val coinPriceHistory: List<DataPoint> = emptyList()
 )
 
 fun Coin.toCoinUi(): CoinUi {
