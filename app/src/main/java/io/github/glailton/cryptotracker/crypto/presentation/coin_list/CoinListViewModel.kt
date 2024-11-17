@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.glailton.cryptotracker.core.domain.util.onError
 import io.github.glailton.cryptotracker.core.domain.util.onSuccess
 import io.github.glailton.cryptotracker.crypto.domain.CoinDataSource
+import io.github.glailton.cryptotracker.crypto.presentation.models.CoinUi
 import io.github.glailton.cryptotracker.crypto.presentation.models.toCoinUi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,10 +15,11 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.ZonedDateTime
 
 class CoinListViewModel(
     private val coinDataSource: CoinDataSource
-): ViewModel() {
+) : ViewModel() {
 
     private val _state = MutableStateFlow(CoinListState())
     val state = _state
@@ -33,17 +35,21 @@ class CoinListViewModel(
 
     private fun loadCoins() {
         viewModelScope.launch {
-            _state.update { it.copy(
-                isLoading = true
-            ) }
+            _state.update {
+                it.copy(
+                    isLoading = true
+                )
+            }
 
             coinDataSource
                 .getCoins()
                 .onSuccess { coins ->
-                    _state.update { it.copy(
-                        isLoading = false,
-                        coins = coins.map { coin -> coin.toCoinUi() }
-                    ) }
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            coins = coins.map { coin -> coin.toCoinUi() }
+                        )
+                    }
                 }
                 .onError { error ->
                     _state.update { it.copy(isLoading = false) }
@@ -53,9 +59,26 @@ class CoinListViewModel(
     }
 
     fun onAction(action: CoinListAction) {
-        when(action) {
+        when (action) {
             is CoinListAction.OnCoinClick -> {
+               selectCoin(action.coinUi)
+            }
+        }
+    }
 
+
+    private fun selectCoin(coinUi: CoinUi) {
+        _state.update { it.copy(selectedCoin = coinUi) }
+
+        viewModelScope.launch {
+            coinDataSource.getCoinHistory(
+                coinId = coinUi.id,
+                start = ZonedDateTime.now().minusDays(5),
+                end = ZonedDateTime.now()
+            ).onSuccess { history ->
+                println(history)
+            }.onError { error ->
+                _events.send(CoinListEvent.Error(error))
             }
         }
     }
